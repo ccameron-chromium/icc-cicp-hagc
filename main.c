@@ -1,17 +1,18 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 // Reads a big-endian (ICC byte order) uint32 from p.
 static uint32_t be32(const uint8_t* p) { return (uint32_t)p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3]; }
 
 // Finds the ST 2094-50 payload of the 'HAGC' tag and the 4 bytes of 'cicp' tag
 // data in the ICC profile in buf[0..len). On success, points hagc/cicp into buf
-// and sets hagc_size/cicp_size. If the profile fails basic validation (the same
-// checks as skcms) or a tag is absent or malformed, its outputs are unchanged.
+// and sets hagc_size/cicp_size. If the profile fails basic header and tag table
+// validation, or a tag is absent or malformed, its outputs are unchanged.
 void icc_find_hagc_cicp(const uint8_t* buf, size_t len,
                         const uint8_t** hagc, size_t* hagc_size,
                         const uint8_t** cicp, size_t* cicp_size) {
-  // Make sure header and tag size will fit.
+  // Make sure header and tag count will fit.
   const uint32_t kHeaderSize = 128;
   if (len < kHeaderSize + 4) return;
 
@@ -34,7 +35,7 @@ void icc_find_hagc_cicp(const uint8_t* buf, size_t len,
   uint64_t tags_end  = kHeaderSize + 4 + kTagEntrySize * tag_count;
   if (size < tags_end) return;
 
-  // Search for the CICP and HAGC tags with the expected types.
+  // Search for the CICP and HAGC tags.
   const uint8_t* cicp_tag = NULL;
   const uint8_t* hagc_tag = NULL;
   for (uint64_t i = 0; i < tag_count; i++) {
@@ -96,10 +97,15 @@ static void print_hex(const char* name, const uint8_t* data, size_t size) {
 }
 
 int main(int argc, char** argv) {
-  static uint8_t buf[1 << 24];
   FILE* f = argc > 1 ? fopen(argv[1], "rb") : NULL;
-  if (!f) return fprintf(stderr, "usage: %s profile.icc\n", argv[0]), 1;
-  size_t len = fread(buf, 1, sizeof(buf), f);
+  if (!f) return fprintf(stderr, "usage: icc-cicp-hagc profile.icc\n"), 1;
+  uint8_t* buf = NULL;
+  size_t len = 0, cap = 0, n;
+  do {
+    if (len == cap && !(buf = realloc(buf, cap = cap * 2 + 4096))) return 1;
+    n = fread(buf + len, 1, cap - len, f);
+    len += n;
+  } while (n > 0);
   fclose(f);
 
   const uint8_t *hagc = NULL, *cicp = NULL;
@@ -107,5 +113,6 @@ int main(int argc, char** argv) {
   icc_find_hagc_cicp(buf, len, &hagc, &hagc_size, &cicp, &cicp_size);
   print_hex("CICP", cicp, cicp_size);
   print_hex("ST 2094-50", hagc, hagc_size);
+  free(buf);
   return 0;
 }
