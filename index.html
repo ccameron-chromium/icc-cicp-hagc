@@ -9,24 +9,30 @@
   html, body {
     margin: 0;
     height: 100%;
-    background: #111;
-    color: #eee;
+    background: #fff;
+    color: #111;
     font-family: system-ui, sans-serif;
   }
-  .grid {
-    display: grid;
+  body {
+    display: flex;
+    flex-direction: column;
     height: 100vh;
+  }
+  .grid {
+    flex: 1;
+    min-height: 0;
+    display: grid;
     gap: 8px;
     padding: 8px;
-    /* Landscape screens: 4x2 (JPEG + PNGs on top, AVIFs below). */
+    /* Landscape screens: one row of four (images are portrait). */
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: repeat(2, 1fr);
+    grid-template-rows: 1fr;
   }
-  /* Portrait / narrow screens: 3x3. */
-  @media (max-aspect-ratio: 1/1) {
+  /* Portrait / narrow screens: 2x2. */
+  @media (max-aspect-ratio: 3/2) {
     .grid {
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
     }
   }
   figure {
@@ -35,7 +41,7 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
-    background: #1c1c1c;
+    background: #f2f2f2;
     border-radius: 6px;
     overflow: hidden;
   }
@@ -46,9 +52,9 @@
     flex: none;
   }
   figcaption .fmt { font-weight: 600; }
-  figcaption .tags { opacity: 0.8; }
-  figcaption code {
-    background: #333;
+  figcaption .tags { opacity: 0.7; }
+  code {
+    background: #e2e2e2;
     padding: 1px 4px;
     border-radius: 3px;
   }
@@ -57,32 +63,6 @@
     min-height: 0;
     width: 100%;
     object-fit: contain;
-  }
-  :root { dynamic-range-limit: no-limit; }
-  :root.limit-standard { dynamic-range-limit: standard; }
-  .controls {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    font-size: 14px;
-  }
-  .controls button {
-    font: inherit;
-    font-size: 16px;
-    padding: 10px 18px;
-    border-radius: 6px;
-    border: 1px solid #555;
-    background: #2a2a2a;
-    color: #eee;
-    cursor: pointer;
-  }
-  .controls button:hover { background: #3a3a3a; }
-  .controls code {
-    background: #333;
-    padding: 1px 4px;
-    border-radius: 3px;
   }
 </style>
 </head>
@@ -116,41 +96,6 @@
     </figcaption>
     <img src="bmw-pq-cICP-and-iCCP.png" alt="PNG with cICP and iCCP">
   </figure>
-  <figure>
-    <figcaption>
-      <span class="fmt">AVIF</span> &mdash; <code>nclx</code> (BT.2020 / PQ) only<br>
-      <span class="tags">bmw-pq-nclx.avif</span>
-    </figcaption>
-    <img src="bmw-pq-nclx.avif" alt="AVIF with nclx">
-  </figure>
-  <figure>
-    <figcaption>
-      <span class="fmt">AVIF</span> &mdash; <code>nclx</code> (BT.2020 / PQ) + ICC<br>
-      <span class="tags">bmw-pq-nclx-icc.avif</span>
-    </figcaption>
-    <img src="bmw-pq-nclx-icc.avif" alt="AVIF with nclx and ICC">
-  </figure>
-  <figure>
-    <figcaption>
-      <span class="fmt">AVIF</span> &mdash; <code>nclx</code> (unspecified) + ICC<br>
-      <span class="tags">bmw-pq-nclx-unspecified-icc.avif</span>
-    </figcaption>
-    <img src="bmw-pq-nclx-unspecified-icc.avif" alt="AVIF with unspecified nclx and ICC">
-  </figure>
-  <div class="controls">
-    <div><code>dynamic-range-limit</code>: <code id="drl-value">no-limit</code></div>
-    <button id="drl-toggle" type="button">Switch to standard</button>
-  </div>
 </div>
-<script>
-  const root = document.documentElement;
-  const btn = document.getElementById('drl-toggle');
-  const value = document.getElementById('drl-value');
-  btn.addEventListener('click', () => {
-    const standard = root.classList.toggle('limit-standard');
-    value.textContent = standard ? 'standard' : 'no-limit';
-    btn.textContent = standard ? 'Switch to no-limit' : 'Switch to standard';
-  });
-</script>
 </body>
 </html>
